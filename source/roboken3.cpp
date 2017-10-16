@@ -31,6 +31,7 @@ dSpaceID      space;                   // 衝突検出用のスペース
 dGeomID       ground;                  // 地面のジオメトリID番号
 dJointGroupID contactgroup;            // 接触点グループ
 dJointID      joint[NUM];              // ジョイントのID番号
+dJointID      etc[2];
 dsFunctions   fn;                      // ドロースタッフの描画関数
 
 int fd;
@@ -45,7 +46,7 @@ union UFloatLong {
   float	fFloat;
 };
 
-MyObject rlink[NUM], base;                   // リンク
+MyObject rlink[NUM], tsuba, shinai;                   // リンク
 dReal  THETA[NUM] = {0.0};             // 関節の目標角度[rad]
 static const dReal BASE1[3] = {0.041, 0.031, 0.3};
 
@@ -86,6 +87,8 @@ int serial_init(int baudRate){
 
     ioctl(fd, TCSETS, &tio);            // ポートの設定を有効にする
 
+    printf("connect open\n");
+
     return 0;
 
 }
@@ -101,7 +104,8 @@ void tx_angle(float angle, int link)
   tx[3] = func.lLong >> 16;
   tx[4] = func.lLong >> 8;
   tx[5] = func.lLong;
-  write(fd, tx, sizeof(tx));
+  printf("id = %x, link = %x\n", tx[0], tx[1]);
+  write(fd, tx, 6);
 
 }
 
@@ -109,46 +113,42 @@ void tx_angle(float angle, int link)
 void  makeArm()
 {
   dMass mass;                                    // 質量パラメータ
-  dReal x[NUM]      = {0.00, 0.01, 0.00, 0.00};  // 重心 x
+  dReal x[NUM]      = {0.01, 0.01, 0.00, 0.00};  // 重心 x
   dReal y[NUM]      = {0.00, 0.00, 0.00, 0.00};  // 重心 y
-  dReal z[NUM]      = {0.35, 0.31, 0.3365, 0.377};  // 重心 z
-  dReal length[NUM] = {0.10, 0.021, 0.031, 0.05};  // 長さ
-  dReal weight[NUM] = {9.00, 2.00, 2.00, 2.00};  // 質量
-  dReal r[NUM]      = {0.20, 0.04, 0.04, 0.04};  // 半径
+  dReal z[NUM]      = {0.15, 0.31, 0.3365, 0.377};  // 重心 z
+  dReal weight[NUM] = {9.00, 0.10, 0.10, 0.10};  // 質量
   dReal c_x[NUM]    = {0.00, 0.00, 0.00, 0.00};  // 関節中心点 x
   dReal c_y[NUM]    = {0.00, 0.00, 0.00, 0.00};  // 関節中心点 y
   dReal c_z[NUM]    = {0.30, 0.3, 0.311, 0.342};  // 関節中心点 z
   dReal axis_x[NUM] = {0, 0, 0, 0};              // 関節回転軸 x
   dReal axis_y[NUM] = {0, 0, 1, 1};              // 関節回転軸 y
   dReal axis_z[NUM] = {1, 1, 0, 0};              // 関節回転軸 z
+  
+  dReal xl[NUM] = {0.041, 0.041, 0.018, 0.028};
+  dReal yl[NUM] = {0.031, 0.035, 0.045, 0.031};
+  dReal zl[NUM] = {0.3, 0.021, 0.031, 0.05};
 
   // リンクの生成
-  for (int i = 1; i < NUM; i++) {
+  for (int i = 0; i < NUM; i++) {
     rlink[i].body = dBodyCreate(world);
     dBodySetPosition(rlink[i].body, x[i], y[i], z[i]);
     dMassSetZero(&mass);
-    //dMassSetCapsuleTotal(&mass,weight[i],3,r[i],length[i]);
-    dMassSetBoxTotal(&mass, weight[i], 2*r[i], 2*r[i], length[i]);
+    dMassSetBoxTotal(&mass, weight[i], xl[i], yl[i], zl[i]);
     dBodySetMass(rlink[i].body, &mass);
-    //rlink[i].geom = dCreateCapsule(space,r[i],length[i]);
-    rlink[i].geom = dCreateBox(space, 2*r[i], 2*r[i], length[i]);
+    rlink[i].geom = dCreateBox(space, xl[i], yl[i], zl[i]);
     dGeomSetBody(rlink[i].geom,rlink[i].body);
   }
-  base.body = dBodyCreate(world);
-  dBodySetPosition(base.body, 0.01, 0.00, 0.15);
+  tsuba.body = dBodyCreate(world);
+  dBodySetPosition(tsuba.body, 0.00, 0.00, 0.4);
   dMassSetZero(&mass);
-  dMassSetBoxTotal(&mass, 9.00, 0.2, 0.3, 0.3);
-  dBodySetMass(base.body, &mass);
-  base.geom = dCreateBox(space, 0.2, 0.3, 0.4);
-  dGeomSetBody(base.geom, base.body);
+  dMassSetCylinder(&mass, 0.5, 3, 0.04, 0.005);
+  dBodySetMass(tsuba.body, &mass);
+  tsuba.geom = dCreateCylinder(space, 0.04, 0.005);
+  dGeomSetBody(tsuba.geom, tsuba.body);
 
   // ジョイントの生成とリンクへの取り付け
-  //joint[0] = dJointCreateFixed(world, 0);  // 固定ジョイント
-  //dJointAttach(joint[0], rlink[0].body, 0);
-  //dJointSetFixed(joint[0]);
-  
   joint[0] = dJointCreateFixed(world, 0);  // 固定ジョイント
-  dJointAttach(joint[0], base.body, 0);
+  dJointAttach(joint[0], rlink[0].body, 0);
   dJointSetFixed(joint[0]);
 
   for (int j = 1; j < NUM; j++) {
@@ -157,14 +157,22 @@ void  makeArm()
     dJointSetHingeAnchor(joint[j], c_x[j], c_y[j], c_z[j]);
     dJointSetHingeAxis(joint[j], axis_x[j], axis_y[j],axis_z[j]);
   }
+  
+  etc[0] = dJointCreateFixed(world, 0);// ヒンジジョイントの生成
+  dJointAttach(etc[0], tsuba.body, rlink[3].body);// 玉と円柱のボディをジョイントで結合
+  //dJointSetHingeAnchor(etc[0], 0, 0, 0.37);// ヒンジのアンカー(中心点）を設定
+  //dJointSetHingeAxis(etc[0], 1, 0, 0);
+  dJointSetFixed(etc[0]);
+  
 }
 
 /*** ロボットアームの描画 ***/
 void drawArm()
 {
+  const dReal *pos1, *R1;
     dReal r,length;
     dReal *p[4];
-    dReal length1[NUM][3] = {{0.021, 0.031, 0.010},
+    dReal length1[NUM][3] = {{0.021, 0.031, 0.3},
                              {0.041, 0.035, 0.021},
                              {0.018, 0.045, 0.031},
                              {0.028, 0.031, 0.050}};  // 長さ
@@ -172,26 +180,29 @@ void drawArm()
     for(int i=0;i<NUM;i++){
         p[i] = length1[i];
     }
-   dsDrawBox(dGeomGetPosition(base.geom), dGeomGetRotation(base.geom), BASE1);
-   
-   for (int i = 1; i < NUM; i++ ) {       // カプセルの描画
+
+   for (int i = 0; i < NUM; i++ ) {       // カプセルの描画
      dsDrawBox(dGeomGetPosition(rlink[i].geom), dGeomGetRotation(rlink[i].geom), &length1[i][0]);
    }
-   
+   // 円柱の描画
+   pos1 = dBodyGetPosition(tsuba.body);// 位置の取得
+   R1   = dBodyGetRotation(tsuba.body);// 姿勢の取得
+   dsDrawCylinder(pos1,R1, 0.005, 0.03);// カプセルの描画
 }
 
 /*** P制御 ***/
 void Pcontrol()
 {
-  dReal k =  10.0, fMax = 100.0;                   // 比例ゲイン，最大トルク
+  dReal k =  30.0, fMax = 200.0;                   // 比例ゲイン，最大トルク
   static float angle_now[NUM], angle_old[NUM];
 
   for (int j = 1; j < NUM; j++) {
     dReal tmp = dJointGetHingeAngle(joint[j]);     // 関節角の取得
     angle_now[j] = tmp;
-    if(angle_old[j] != angle_now[j]){
+    if(angle_old[j] != angle_now[j]){//更新したら送信する
       printf("joint%d : %f\n", j, angle_now[j]);
-      tx_angle(angle_now[j], j);
+      if(j == 3)angle_now[j] *= -1;
+      tx_angle(angle_now[j]*-1, j);
     }
     dReal z = THETA[j] - tmp;                      // 残差
     dJointSetHingeParam(joint[j],dParamVel, k*z);  // 角速度の設定
@@ -203,7 +214,7 @@ void Pcontrol()
 /*** 視点と視線の設定 ***/
 void start()
 {
-  float xyz[3] = {    3.0f, 1.3f, 0.8f};          // 視点[m]
+  float xyz[3] = {    1.5f, 1.3f, 0.8f};          // 視点[m]
   float hpr[3] = { -160.0f, 4.5f, 0.0f};          // 視線[°]
   dsSetViewpoint(xyz, hpr);                       // 視点と視線の設定
 }
@@ -218,6 +229,13 @@ void command(int cmd)
     case 'd': THETA[2] -= M_PI/180; break;     // dキー
     case 'l': THETA[3] += M_PI/180; break;     // lキー
     case 's': THETA[3] -= M_PI/180; break;     // sキー
+    case 'u': THETA[1] += M_PI/45;  break;
+    case 'r': THETA[1] -= M_PI/45;  break;
+    case 'i': THETA[2] += M_PI/45;  break;
+    case 'e': THETA[2] -= M_PI/45;  break;
+    case 'o': THETA[3] += M_PI/45;  break;
+    case 'w': THETA[3] -= M_PI/45;  break;
+    
   }
 }
 
@@ -227,8 +245,6 @@ void simLoop(int pause)
   Pcontrol();                                  // P制御
   dWorldStep(world, 0.01);                     // 動力学計算
   drawArm();                                   // ロボットの描画
-
-  
 }
 
 /*** ドロースタッフの設定 ***/
