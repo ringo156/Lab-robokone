@@ -2,14 +2,7 @@
 #include <stdlib.h>
 #include <ode/ode.h>
 #include <drawstuff/drawstuff.h>
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/ioctl.h>
-#include <fcntl.h>
-#include <termios.h>
-#include <unistd.h>
-
+#include "uart_mcu.h"
 
 #ifdef _MSC_VER
 #pragma warning(disable:4244 4305)  // for VC++, no precision loss complaints
@@ -20,9 +13,9 @@
 #define dsDrawSphere   dsDrawSphereD
 #define dsDrawCapsule  dsDrawCapsuleD
 #define dsDrawCylinder dsDrawCylinderD
-#define ID 0x55
-#define SERIAL_PORT "/dev/ttyUSB0"
+
 #define BAUD_RATE B19200
+
 #endif
 #define NUM 4                          // リンク数
 
@@ -47,51 +40,14 @@ union UFloatLong {
 };
 
 MyObject rlink[NUM], tsuba, shinai;                   // リンク
+dBodyID       sensor;                  // センサ用のボディID
+dJointID      sensor_joint;            // センサ固定用の関節
+int           ANSWER = 1;              // 逆運動学の解
+
+dReal P[3] = {1.0, 1.0, 1.5};             // 先端の位置
+dReal a[3], b[3];                         // 有顔ベクトル(a,b)
 dReal  THETA[NUM] = {0.0};             // 関節の目標角度[rad]
 static const dReal BASE1[3] = {0.041, 0.031, 0.3};
-
-void read_buf(void){
-    unsigned char buf[255];
-    int len, i;
-
-    len = read(fd, buf, sizeof(buf));
-    if (0 < len) {
-        for(i = 0; i < len; i++) {
-            printf("%02X", buf[i]);
-        }
-        printf("\n");
-    }
-
-}
-
-int serial_init(int baudRate){    
-    unsigned char msg[] = "serial port open...\n";
-    struct termios tio;
-    fd = open(SERIAL_PORT, O_RDWR);     // デバイスをオープンする
-    if (fd < 0) {
-        printf("open error\n");
-        return -1;
-    }
-    tio.c_cflag += CREAD;               // 受信有効
-    tio.c_cflag += CLOCAL;              // ローカルライン（モデム制御なし）
-    tio.c_cflag += CS8;                 // データビット:8bit
-    tio.c_cflag += 0;                   // ストップビット:1bit
-    tio.c_cflag += 0;                   // パリティ:None
-
-    cfsetispeed( &tio, baudRate );
-    cfsetospeed( &tio, baudRate );
-
-    cfmakeraw(&tio);                    // RAWモード
-
-    tcsetattr( fd, TCSANOW, &tio );     // デバイスに設定を行う
-
-    ioctl(fd, TCSETS, &tio);            // ポートの設定を有効にする
-
-    printf("connect open\n");
-
-    return 0;
-
-}
 
 void tx_angle(float angle, int link)
 {
@@ -259,7 +215,7 @@ void setDrawStuff()
 
 int main(int argc, char **argv)
 {
-  serial_init(BAUD_RATE);
+  serial_init(BAUD_RATE, &fd);
   dInitODE();                                     // ODEの初期化
   setDrawStuff();
   world        = dWorldCreate();                  // ワールドの生成
