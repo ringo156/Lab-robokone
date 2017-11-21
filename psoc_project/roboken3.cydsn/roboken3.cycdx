@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<blockRegMap version="1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://cypress.com/xsd/cyblockregmap cyblockregmap.xsd" xmlns="http://cypress.com/xsd/cyblockregmap">
+  <block name="cy_constant_1" BASE="0x0" SIZE="0x0" desc="" visible="true" hidden="false" />
+  <block name="ComPc" BASE="0x0" SIZE="0x0" desc="UART" visible="true" hidden="false">
+    <block name="IntClock" BASE="0x0" SIZE="0x0" desc="" visible="true" hidden="false" />
+    <block name="TXInternalInterrupt" BASE="0x0" SIZE="0x0" desc="" visible="true" hidden="false" />
+    <block name="RXInternalInterrupt" BASE="0x0" SIZE="0x0" desc="" visible="true" hidden="false" />
+    <block name="BUART" BASE="0x0" SIZE="0x0" desc="" visible="true" hidden="false" />
+    <block name="VirtualMux_1" BASE="0x0" SIZE="0x0" desc="" visible="true" hidden="false" />
+    <register name="TX_ComPc_TX_DATA" address="0x40006444" bitWidth="8" desc="TX Data Register" hidden="false" />
+    <register name="TX_ComPc_TX_STATUS" address="0x40006464" bitWidth="8" desc="TX status register" hidden="false">
+      <field name="ComPc_TX_STS_COMPLETE" from="0" to="0" access="R" resetVal="" desc="" hidden="false" />
+      <field name="ComPc_TX_STS_FIFO_EMPTY" from="1" to="1" access="R" resetVal="" desc="" hidden="false" />
+      <field name="ComPc_TX_STS_FIFO_FULL" from="2" to="2" access="R" resetVal="" desc="" hidden="false" />
+      <field name="ComPc_TX_STS_FIFO_NOT_FULL" from="3" to="3" access="R" resetVal="" desc="" hidden="false" />
+    </register>
+    <register name="RX_ComPc_RX_STATUS" address="0x40006466" bitWidth="8" desc="RX status register" hidden="false">
+      <field name="ComPc_RX_STS_MRKSPC" from="0" to="0" access="R" resetVal="" desc="" hidden="false" />
+      <field name="ComPc_RX_STS_BREAK" from="1" to="1" access="R" resetVal="" desc="" hidden="false" />
+      <field name="ComPc_RX_STS_PAR_ERROR" from="2" to="2" access="R" resetVal="" desc="" hidden="false" />
+      <field name="ComPc_RX_STS_STOP_ERROR" from="3" to="3" access="R" resetVal="" desc="" hidden="false" />
+      <field name="ComPc_RX_STS_OVERRUN" from="4" to="4" access="R" resetVal="" desc="" hidden="false" />
+      <field name="ComPc_RX_STS_FIFO_NOTEMPTY" from="5" to="5" access="R" resetVal="" desc="" hidden="false" />
+      <field name="ComPc_RX_STS_ADDR_MATCH" from="6" to="6" access="R" resetVal="" desc="" hidden="false" />
+    </register>
+    <register name="RX_ComPc_RX_ADDRESS1" address="0x40006526" bitWidth="8" desc="RX Address1 Register" hidden="false" />
+    <register name="RX_ComPc_RX_ADDRESS2" address="0x40006536" bitWidth="8" desc="RX Address2 Register" hidden="false" />
+    <register name="RX_ComPc_RX_DATA" address="0x40006546" bitWidth="8" desc="RX Data Register" hidden="false" />
+  </block>
+  <block name="PcTxIsr" BASE="0x0" SIZE="0x0" desc="" visible="true" hidden="false" />
+  <block name="cy_boot" BASE="0x0" SIZE="0x0" desc="" visible="true" hidden="false" />
+  <block name="PcRxIsr" BASE="0x0" SIZE="0x0" desc="" visible="true" hidden="false" />
+  <block name="Rx_1" BASE="0x0" SIZE="0x0" desc="" visible="true" hidden="false" />
+  <block name="Tx_1" BASE="0x0" SIZE="0x0" desc="" visible="true" hidden="false" />
+  <block name="UART_servo" BASE="0x0" SIZE="0x0" desc="UART" visible="true" hidden="false">
+    <block name="IntClock" BASE="0x0" SIZE="0x0" desc="" visible="true" hidden="false" />
+    <block name="VirtualMux_1" BASE="0x0" SIZE="0x0" desc="" visible="true" hidden="false" />
+    <block name="RXInternalInterrupt" BASE="0x0" SIZE="0x0" desc="" visible="true" hidden="false" />
+    <block name="BUART" BASE="0x0" SIZE="0x0" desc="" visible="true" hidden="false" />
+    <register name="RX_UART_servo_RX_ADDRESS1" address="0x40006426" bitWidth="8" desc="RX Address1 Register" hidden="false" />
+    <register name="RX_UART_servo_RX_ADDRESS2" address="0x40006436" bitWidth="8" desc="RX Address2 Register" hidden="false" />
+    <register name="RX_UART_servo_RX_DATA" address="0x40006446" bitWidth="8" desc="RX Data Register" hidden="false" />
+    <register name="RX_UART_servo_RX_STATUS" address="0x40006465" bitWidth="8" desc="RX status register" hidden="false">
+      <field name="UART_servo_RX_STS_MRKSPC" from="0" to="0" access="R" resetVal="" desc="" hidden="false" />
+      <field name="UART_servo_RX_STS_BREAK" from="1" to="1" access="R" resetVal="" desc="" hidden="false" />
+      <field name="UART_servo_RX_STS_PAR_ERROR" from="2" to="2" access="R" resetVal="" desc="" hidden="false" />
+      <field name="UART_servo_RX_STS_STOP_ERROR" from="3" to="3" access="R" resetVal="" desc="" hidden="false" />
+      <field name="UART_servo_RX_STS_OVERRUN" from="4" to="4" access="R" resetVal="" desc="" hidden="false" />
+      <field name="UART_servo_RX_STS_FIFO_NOTEMPTY" from="5" to="5" access="R" resetVal="" desc="" hidden="false" />
+      <field name="UART_servo_RX_STS_ADDR_MATCH" from="6" to="6" access="R" resetVal="" desc="" hidden="false" />
+    </register>
+    <register name="TX_UART_servo_TX_DATA" address="0x40006544" bitWidth="8" desc="TX Data Register" hidden="false" />
+    <register name="TX_UART_servo_TX_STATUS" address="0x40006565" bitWidth="8" desc="TX status register" hidden="false">
+      <field name="UART_servo_TX_STS_COMPLETE" from="0" to="0" access="R" resetVal="" desc="" hidden="false" />
+      <field name="UART_servo_TX_STS_FIFO_EMPTY" from="1" to="1" access="R" resetVal="" desc="" hidden="false" />
+      <field name="UART_servo_TX_STS_FIFO_FULL" from="2" to="2" access="R" resetVal="" desc="" hidden="false" />
+      <field name="UART_servo_TX_STS_FIFO_NOT_FULL" from="3" to="3" access="R" resetVal="" desc="" hidden="false" />
+    </register>
+  </block>
+  <block name="cy_constant_7" BASE="0x0" SIZE="0x0" desc="" visible="true" hidden="false" />
+  <block name="Tx_2" BASE="0x0" SIZE="0x0" desc="" visible="true" hidden="false" />
+  <block name="UART_debug" BASE="0x0" SIZE="0x0" desc="" visible="true" hidden="false">
+    <block name="tx" BASE="0x0" SIZE="0x0" desc="" visible="true" hidden="false" />
+  </block>
+</blockRegMap>
