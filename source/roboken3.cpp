@@ -102,6 +102,14 @@ void  makeArm()
   tsuba.geom = dCreateCylinder(space, 0.04, 0.005);
   dGeomSetBody(tsuba.geom, tsuba.body);
 
+  shinai.body = dBodyCreate(world);
+  dBodySetPosition(shinai.body, 0.00, 0.00, 0.5);
+  dMassSetZero(&mass);
+  dMassSetCylinder(&mass, 0.5, 3, 0.003, 0.2);//r, h
+  dBodySetMass(shinai.body, &mass);
+  shinai.geom = dCreateCylinder(space, 0.003, 0.2);
+  dGeomSetBody(shinai.geom, shinai.body);
+
   // ジョイントの生成とリンクへの取り付け
   joint[0] = dJointCreateFixed(world, 0);  // 固定ジョイント
   dJointAttach(joint[0], rlink[0].body, 0);
@@ -116,9 +124,11 @@ void  makeArm()
   
   etc[0] = dJointCreateFixed(world, 0);// ヒンジジョイントの生成
   dJointAttach(etc[0], tsuba.body, rlink[3].body);// 玉と円柱のボディをジョイントで結合
-  //dJointSetHingeAnchor(etc[0], 0, 0, 0.37);// ヒンジのアンカー(中心点）を設定
-  //dJointSetHingeAxis(etc[0], 1, 0, 0);
   dJointSetFixed(etc[0]);
+
+  etc[1] = dJointCreateFixed(world, 0);
+  dJointAttach(etc[1], shinai.body, rlink[3].body);
+  dJointSetFixed(etc[1]);
   
 }
 
@@ -143,7 +153,10 @@ void drawArm()
    // 円柱の描画
    pos1 = dBodyGetPosition(tsuba.body);// 位置の取得
    R1   = dBodyGetRotation(tsuba.body);// 姿勢の取得
-   dsDrawCylinder(pos1,R1, 0.005, 0.03);// カプセルの描画
+   dsDrawCylinder(pos1,R1, 0.005, 0.03);// 鍔の描画
+   pos1 = dBodyGetPosition(shinai.body);
+   R1   = dBodyGetRotation(shinai.body);
+   dsDrawCylinder(pos1,R1, 0.2, 0.003);//竹刀の描画
 }
 
 /*** P制御 ***/
@@ -178,20 +191,48 @@ void start()
 /*** キー入力関数 ***/
 void command(int cmd)
 {
+    if(cmd == 'j'){
+      THETA[1] += M_PI/180;
+    }else
+    if(cmd == 'f'){
+      THETA[1] -= M_PI/180;
+    }else
+    if(cmd == 'k'){
+      THETA[2] += M_PI/180;
+    }else
+    if(cmd == 'd'){
+      THETA[2] -= M_PI/180;
+    }else
+    if(cmd == 'l'){
+      THETA[3] += M_PI/180;
+    }else
+    if(cmd == 's'){
+      THETA[3] -= M_PI/180;
+    }
+    //角度の極限の設定
+    if(THETA[1] > 90 * M_PI / 180){
+      THETA[1] = 90 * M_PI / 180;
+    }else
+    if(THETA[1] < -90 * M_PI / 180){
+      THETA[1] = -90 * M_PI / 180;
+    }
+  
+}
+
+/*** キー入力関数 ***/
+void command2(int cmd)
+{
   switch (cmd) {
-    case 'j': THETA[1] += M_PI/180; break;     // jキー
-    case 'f': THETA[1] -= M_PI/180; break;     // fキー
-    case 'k': THETA[2] += M_PI/180; break;     // kキー
-    case 'd': THETA[2] -= M_PI/180; break;     // dキー
-    case 'l': THETA[3] += M_PI/180; break;     // lキー
-    case 's': THETA[3] -= M_PI/180; break;     // sキー
-    case 'u': THETA[1] += M_PI/45;  break;
-    case 'r': THETA[1] -= M_PI/45;  break;
-    case 'i': THETA[2] += M_PI/45;  break;
-    case 'e': THETA[2] -= M_PI/45;  break;
-    case 'o': THETA[3] += M_PI/45;  break;
-    case 'w': THETA[3] -= M_PI/45;  break;
-    
+  case '1':  ANSWER = 1; break;    // 1キーを押すと姿勢１
+  case '2':  ANSWER = 2; break;    // 2キーを押すと姿勢２
+  case '3':  ANSWER = 3; break;    // 3キーを押すと姿勢３
+  case '4':  ANSWER = 4; break;    // 4キーを押すと姿勢４
+  case 'j':  P[0] += 0.1; break;   // jキーを押すと先端のx座標が増加
+  case 'f':  P[0] -= 0.1; break;   // fキーを押すと先端のx座標が減少
+  case 'k':  P[1] += 0.1; break;   // kキーを押すと先端のy座標が増加
+  case 'd':  P[1] -= 0.1; break;   // dキーを押すと先端のy座標が減少
+  case 'l':  P[2] += 0.1; break;   // lキーを押すと先端のz座標が増加
+  case 's':  P[2] -= 0.1; break;   // sキーを押すと先端のz座標が減少
   }
 }
 
@@ -224,6 +265,7 @@ int main(int argc, char **argv)
   ground       = dCreatePlane(space, 0, 0, 1, 0); // 地面の生成
   dWorldSetGravity(world, 0, 0, -9.8);            // 重力の設定
   makeArm();                                      // アームの生成
+  //makeSensor();                                   // センサの生成
   dsSimulationLoop(argc, argv, 640, 480, &fn);    // シミュレーションループ
   dSpaceDestroy(space);                           // スペースの破壊
   dWorldDestroy(world);                           // ワールドの破壊
