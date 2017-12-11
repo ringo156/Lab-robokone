@@ -138,7 +138,7 @@ void  makeArm()
 void makeSensor()
 {
   dMass mass;
-  double sx = 0.0, sy = 0.0, sz = 0.575;  // センサの初期座標[m]
+  double sx = 0.0, sy = 0.0, sz = 0.585;  // センサの初期座標[m]
   double size = 0.01, weight = 0.00001; // センサのサイズ[m]と重量[kg]
 
   sensor = dBodyCreate(world);          // センサの生成
@@ -281,11 +281,13 @@ void  inverseKinematics()
     THETA[2] = -(M_PI/2 - phi + alpha);
     THETA[3] = M_PI - beta; break;
   }
-  /*
-  printf("1=%f\n", THETA[1]);
-  printf("2=%f\n", THETA[2]);
-  printf("3=%f\n", THETA[3]);
-  */
+  //角度の極限の設定
+  if(THETA[1] > 90 * M_PI / 180){
+    THETA[1] = 90 * M_PI / 180;
+  }else
+  if(THETA[1] < -90 * M_PI / 180){
+    THETA[1] = -90 * M_PI / 180;
+  }
 }
 
 
