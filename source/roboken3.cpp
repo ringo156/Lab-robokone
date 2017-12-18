@@ -13,11 +13,15 @@
 #define dsDrawSphere   dsDrawSphereD
 #define dsDrawCapsule  dsDrawCapsuleD
 #define dsDrawCylinder dsDrawCylinderD
+#endif
+
 #define ID 0x55
 #define SERIAL_PORT "/dev/ttyUSB0"
 #define BAUD_RATE B19200
-#endif
-#define NUM 4                          // リンク数
+#define normal    0
+#define begin     1
+#define men       2
+#define NUM       4                    // リンク数
 
 dWorldID      world;                   // 動力学計算用のワールド
 dSpaceID      space;                   // 衝突検出用のスペース
@@ -27,7 +31,8 @@ dJointID      joint[NUM];              // ジョイントのID番号
 dJointID      etc[2];
 dsFunctions   fn;                      // ドロースタッフの描画関数
 
-int fd;
+int fd;                                //file descriptor
+int mode;
 
 typedef struct {
   dBodyID body;                        // ボディのID番号
@@ -241,8 +246,6 @@ void start()
 }
 
 // 逆運動学
-// 目標位置がアームの到達範囲以外のときは，逆運動学を計算できないので
-// その処理を組み込む必要があります．
 
 void  inverseKinematics()
 {
@@ -336,6 +339,19 @@ void command2(int cmd)
   case 'd':  P[1] -= 0.025; break;   // dキーを押すと先端のy座標が減少
   case 'l':  P[2] += 0.025; break;   // lキーを押すと先端のz座標が増加
   case 's':  P[2] -= 0.025; break;   // sキーを押すと先端のz座標が減少
+  case 'c':  mode = normal; break;
+  case 'v':  mode = begin; break;
+  case 'b':  mode = men; break;
+  }
+  if(mode == begin){
+    P[0] = 0.1;
+    P[1] = 0.0;
+    P[2] = 0.5;
+  }else
+  if(mode == men){
+    P[0] = 0.25;
+    P[1] = 0.03;
+    P[2] = 0.45;
   }
 }
 
